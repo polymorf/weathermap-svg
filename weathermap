@@ -87,19 +87,47 @@ $script->CDATA(qq|function init(evt)
   }
   tooltip = svgDocument.getElementById('tooltip');
   tooltip_bg = svgDocument.getElementById('tooltip_bg');
+  svg = document.querySelector('svg');
+  pt = svg.createSVGPoint();
+  scale = 1;
+  textAddLength = 8;
+  normalFontSize = 12;
+ }
+
+ function cursorPoint(evt){
+  pt.x = evt.clientX; pt.y = evt.clientY;
+  return pt.matrixTransform(svg.getScreenCTM().inverse());
  }
 
  function ShowTooltip(evt, mouseovertext)
  {
-  tooltip.setAttributeNS(null,"x",evt.clientX+11);
-  tooltip.setAttributeNS(null,"y",evt.clientY+27);
+  var loc = cursorPoint(evt);
+  if ( scale ) {
+   xratio = loc.x / evt.clientX;
+   yratio = loc.y / evt.clientY;
+
+   tooltip.style.fontSize = parseInt(normalFontSize * xratio)+"px";
+
+   width = tooltip_bg.getAttributeNS(null,"width");
+   height = tooltip_bg.getAttributeNS(null,"height");
+   tooltip_bg.setAttributeNS(null,"width",parseInt(width * xratio));
+   tooltip_bg.setAttributeNS(null,"height",parseInt(height * yratio));
+
+   textAddLength = parseInt(textAddLength * xratio);
+
+   scale = 0;
+  }
+  bbox = tooltip.getBBox();
+  tooltip.setAttributeNS(null,"x",loc.x+11);
+  tooltip.setAttributeNS(null,"y",loc.y+parseInt(bbox.height));
   tooltip.firstChild.data = mouseovertext;
-  tooltip.setAttributeNS(null,"visibility","visible");
 
   length = tooltip.getComputedTextLength();
-  tooltip_bg.setAttributeNS(null,"width",length+8);
-  tooltip_bg.setAttributeNS(null,"x",evt.clientX+8);
-  tooltip_bg.setAttributeNS(null,"y",evt.clientY+14);
+  tooltip_bg.setAttributeNS(null,"width",length+textAddLength);
+  tooltip_bg.setAttributeNS(null,"x",loc.x+8);
+  tooltip_bg.setAttributeNS(null,"y",loc.y+14);
+
+  tooltip.setAttributeNS(null,"visibility","visible");
   tooltip_bg.setAttributeNS(null,"visibility","visibile");
  }
 
@@ -112,6 +140,7 @@ $script->CDATA(qq|function init(evt)
 $svg->style()->CDATA(qq|
  .tooltip{
   font-size: 12px;
+  font-family: monospace;
   fill: black;
  }
  .tooltip_bg{
@@ -124,6 +153,20 @@ $svg->style()->CDATA(qq|
 
 &title;
 &images;
+
+sub getSpeedString ($) {
+	my $value = int(shift);
+	if ( $value >= ( 1000 * 1000 * 1000 ) ) {
+		return int( ( $value * 100 ) / ( 1000 * 1000 * 1000 ) ) / 100 ."Gbps";
+	}
+	if ( $value >= ( 1000 * 1000 ) ) {
+		return int( ( $value * 100 ) / ( 1000 * 1000 ) ) / 100 ."Mbps";
+	}
+	if ( $value >= 1000 ) {
+		return int( ( $value * 100 ) / ( 1000 ) ) / 100 ."Kbps";
+	}
+	return int($value * 100) / 100 ."bps";
+}
 
 sub getMRTG($$) {
 	my $rejex = shift;
@@ -243,7 +286,7 @@ foreach $link ( sort keys %linkType ) {
 		$dashed=1;
 	}
 	if ( $linkType{$link} eq "rrd-single" ) {
-		my $arrow = &draw_arrow(
+		my $arrow1 = &draw_arrow(
 			$xpos{$nodea{$link}},
 			$ypos{$nodea{$link}},
 			$xpos{$nodeb{$link}},
@@ -256,8 +299,15 @@ foreach $link ( sort keys %linkType ) {
 			&middle($ypos{$nodeb{$link}},$ypos{$nodea{$link}}),
 			$inrate . "%", 0
 		);
-		$arrow->attrib("onmousemove","ShowTooltip(evt, 'Box')");
-		$arrow->attrib("onmouseout","HideTooltip(evt)");
+		# TOOLTIP
+		if ( defined( $tooltip{$link} ) ) {
+			my $tooltip_text_in = $tooltip{$link};
+			my $speed = getSpeedString($maxbytes{$link}*8);
+			$tooltip_text_in =~ s/%RATE%/$speed/g;
+			$tooltip_text_in =~ s/%INUSE%/$inrate/g;
+			$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+			$arrow1->attrib("onmouseout","HideTooltip(evt)");
+		}
 	}else{
 		my $arrow1 = &draw_arrow(
 			$xpos{$nodea{$link}},
@@ -289,10 +339,20 @@ foreach $link ( sort keys %linkType ) {
 				$inrate . "%", 0
 			);
 		}
-		$arrow1->attrib("onmousemove","ShowTooltip(evt, 'Box')");
-		$arrow1->attrib("onmouseout","HideTooltip(evt)");
-		$arrow2->attrib("onmousemove","ShowTooltip(evt, 'Box')");
-		$arrow2->attrib("onmouseout","HideTooltip(evt)");
+		# TOOLTIP
+		if ( defined( $tooltip{$link} ) ) {
+			my $tooltip_text_in = $tooltip{$link};
+			my $tooltip_text_out = $tooltip{$link};
+			my $speed = getSpeedString($maxbytes{$link}*8);
+			$tooltip_text_in =~ s/%RATE%/$speed/g;
+			$tooltip_text_out =~ s/%RATE%/$speed/g;
+			$tooltip_text_in =~ s/%INUSE%/$inrate/g;
+			$tooltip_text_out =~ s/%INUSE%/$outrate/g;
+			$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+			$arrow1->attrib("onmouseout","HideTooltip(evt)");
+			$arrow2->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_in')");
+			$arrow2->attrib("onmouseout","HideTooltip(evt)");
+		}
 	}
 }
 print "\n" if($DEBUG);
@@ -727,11 +787,17 @@ sub read_config {
 				$maxbytes{$link} = $bandwidth{$link};
 				$linkType{$link} = $link_target_type;
 			} else{
-				$maxbytes{$link} = $bandwidth{$link}*1024/8;
+				$maxbytes{$link} = $bandwidth{$link}*1000/8;
 				$linkType{$link} = $link_target_type;
 			}
 			if( $link_node->child( 'url' ) ) {
 				$url{$link} = $link_node->child( 'url' )->value;
+			}
+			if( $link_node->child( 'tooltip' ) ) {
+				$tooltip{$link} = $link_node->child( 'tooltip' )->value;
+			}
+			if( $link_node->child( 'tooltip_img' ) ) {
+				$tooltip_url{$link} = $link_node->child( 'tooltip_img' )->value;
 			}
 
 			my $id_member=0;

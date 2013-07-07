@@ -34,11 +34,13 @@
 	 <!ELEMENT label (#PCDATA)>
 
 	 <!ELEMENT links (link+)>
-	 <!ELEMENT link (members, target?, targetin?, targetout?, bandwidth, alert?, url?)>
+	 <!ELEMENT link (members, target?, targetin?, targetout?, bandwidth, alert?, url?, tooltip?, tooltip_img?)>
 	 <!ATTLIST link 
 	 		name ID #REQUIRED
 			type (mrtg | rrd | rrd-single ) #REQUIRED
-	 		url CDATA #IMPLIED>
+	 		url CDATA #IMPLIED
+	 		tooltip CDATA #IMPLIED
+	 		tooltip_img CDATA #IMPLIED>
 	 <!ELEMENT members (member+)>
 	 <!ELEMENT member (#PCDATA)>
 	 <!ELEMENT target EMPTY>
@@ -60,6 +62,8 @@
 	 <!ATTLIST comment name ID #REQUIRED>
 	 <!ELEMENT text (#PCDATA)>
 	 <!ELEMENT url (#PCDATA)>
+	 <!ELEMENT tooltip (#PCDATA)>
+	 <!ELEMENT tooltip_img (#PCDATA)>
 	 
 	 <!ELEMENT objects (object*)>
 	 <!ELEMENT object (label, position, size, url?)>
