@@ -795,6 +795,8 @@ sub read_config {
 			}
 			if( $link_node->child( 'tooltip' ) ) {
 				$tooltip{$link} = $link_node->child( 'tooltip' )->value;
+			}elsif ( $xml->child( 'weathermap' )->child( 'links' )->child( 'default_tooltip' ) ) {
+				$tooltip{$link} = $xml->child( 'weathermap' )->child( 'links' )->child( 'default_tooltip' )->value;
 			}
 			if( $link_node->child( 'tooltip_img' ) ) {
 				$tooltip_url{$link} = $link_node->child( 'tooltip_img' )->value;

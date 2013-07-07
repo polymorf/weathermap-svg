@@ -33,7 +33,8 @@
 	 <!ATTLIST node name ID #REQUIRED>
 	 <!ELEMENT label (#PCDATA)>
 
-	 <!ELEMENT links (link+)>
+	 <!ELEMENT links (default_tooltip?, link+)>
+	 <!ELEMENT default_tooltip (#PCDATA)>
 	 <!ELEMENT link (members, target?, targetin?, targetout?, bandwidth, alert?, url?, tooltip?, tooltip_img?)>
 	 <!ATTLIST link 
 	 		name ID #REQUIRED
@@ -64,6 +65,9 @@
 	 <!ELEMENT url (#PCDATA)>
 	 <!ELEMENT tooltip (#PCDATA)>
 	 <!ELEMENT tooltip_img (#PCDATA)>
+	 <!ATTLIST tooltip_img
+	 		width NMTOKEN #REQUIRED
+	 		height NMTOKEN #REQUIRED>
 	 
 	 <!ELEMENT objects (object*)>
 	 <!ELEMENT object (label, position, size, url?)>
