@@ -367,6 +367,7 @@ sub bars {
 sub objects {
 	foreach $object ( sort keys %object_id ) {
 		my $object_label = $object_label{$object};
+		my $object_color = $object_color{$object};
 		my $object_size_x = $xobjectsize{$object};
 		my $object_size_y= $yobjectsize{$object};
 		my $object_pos_x = $xobjectpos{$object};
@@ -387,7 +388,7 @@ sub objects {
 			rx    => 0,
 			ry     => 0,
 			style=>{
-				'fill' => '#ffffff',
+				'fill' => $object_color,
 				'stroke' => '#000000'
 			}
 		);
@@ -789,6 +790,11 @@ sub read_config {
 			my $object_size_x = $object_size->attribute( 'x' );
 			my $object_size_y = $object_size->attribute( 'y' );
 
+			my $object_color = "#ffffff";
+			if ( $object_node->attribute( 'color' ) ) {
+				$object_color = $object_node->attribute( 'color' );
+			}
+
 			$object = $object_name;
 			$object_id{$object} = $obj_count;
 			$object_label{$object} = $object_label;
@@ -796,6 +802,7 @@ sub read_config {
 			$yobjectpos{$object} = $object_pos_y;
 			$xobjectsize{$object} = $object_size_x;
 			$yobjectsize{$object} = $object_size_y;
+			$object_color{$object} = $object_color;
 
 			if( $object_node->child( 'url' ) ) {
 				$url{$object}=$object_node->child( 'url' )->value;
