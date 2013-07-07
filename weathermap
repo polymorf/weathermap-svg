@@ -119,7 +119,7 @@ $script->CDATA(qq|function init(evt)
   }
   bbox = tooltip.getBBox();
   tooltip.setAttributeNS(null,"x",loc.x+11);
-  tooltip.setAttributeNS(null,"y",loc.y+parseInt(bbox.height));
+  tooltip.setAttributeNS(null,"y",loc.y+15+(normalFontSize * xratio));
   tooltip.firstChild.data = mouseovertext;
 
   length = tooltip.getComputedTextLength();
