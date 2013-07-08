@@ -167,6 +167,7 @@ $script->CDATA(qq|function init(evt)
 $svg->style()->CDATA(qq|
  .tooltip{
   font-size: 12px;
+  font-weight: bold;
   font-family: monospace;
   fill: black;
  }
@@ -329,8 +330,10 @@ foreach $link ( sort keys %linkType ) {
 		if ( defined( $tooltip{$link} ) ) {
 			my $tooltip_text_in = $tooltip{$link};
 			my $speed = getSpeedString($maxbytes{$link}*8);
+			my $current_speed = getSpeedString($input{$link}*8);
 			$tooltip_text_in =~ s/%RATE%/$speed/g;
 			$tooltip_text_in =~ s/%INUSE%/$inrate/g;
+			$tooltip_text_in =~ s/%CURRENT_BANDWIDTH%/$current_speed/g;
 			if ( defined( $tooltip_img_url{$link} ) && defined ( $tooltip_img_width{$link} ) && defined ( $tooltip_img_height{$link} ) ) {
 				$arrow1->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
 			}else {
@@ -373,10 +376,14 @@ foreach $link ( sort keys %linkType ) {
 			my $tooltip_text_in = $tooltip{$link};
 			my $tooltip_text_out = $tooltip{$link};
 			my $speed = getSpeedString($maxbytes{$link}*8);
+			my $current_speed_in = getSpeedString($input{$link}*8);
+			my $current_speed_out = getSpeedString($output{$link}*8);
 			$tooltip_text_in =~ s/%RATE%/$speed/g;
 			$tooltip_text_out =~ s/%RATE%/$speed/g;
 			$tooltip_text_in =~ s/%INUSE%/$inrate/g;
 			$tooltip_text_out =~ s/%INUSE%/$outrate/g;
+			$tooltip_text_in =~ s/%CURRENT_BANDWIDTH%/$current_speed_in/g;
+			$tooltip_text_out =~ s/%CURRENT_BANDWIDTH%/$current_speed_out/g;
 			if ( defined( $tooltip_img_url{$link} ) && defined ( $tooltip_img_width{$link} ) && defined ( $tooltip_img_height{$link} ) ) {
 				$arrow1->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
 				$arrow2->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_in', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
