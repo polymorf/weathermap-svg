@@ -1,10 +1,10 @@
 #!/usr/bin/perl
-# Network Wearthermap-SVG - version 0.3
+# Network Wearthermap-SVG - version 0.5
 # http://sourceforge.net/projects/weathermap-svg/
 # David BERARD, <david@nfrance.com>
 # Based on http://netmon.grnet.gr/weathermap/ by Panagiotis Christias
 
-$VERSION = "0.4";
+$VERSION = "0.5";
 
 use Getopt::Long;
 use XML::Parser;
