@@ -87,11 +87,14 @@ $script->CDATA(qq|function init(evt)
   }
   tooltip = svgDocument.getElementById('tooltip');
   tooltip_bg = svgDocument.getElementById('tooltip_bg');
+  tooltip_img = svgDocument.getElementById('tooltip_img');
   svg = document.querySelector('svg');
   pt = svg.createSVGPoint();
   scale = 1;
   textAddLength = 8;
   normalFontSize = 12;
+  tooltipHeight = 17;
+  tooltipWidth = 55;
  }
 
  function cursorPoint(evt){
@@ -99,8 +102,15 @@ $script->CDATA(qq|function init(evt)
   return pt.matrixTransform(svg.getScreenCTM().inverse());
  }
 
- function ShowTooltip(evt, mouseovertext)
- {
+ function ShowTooltipWithImage(evt, mouseovertext, image_url, image_width, image_height ) {
+  _ShowTooltip(evt,mouseovertext, image_url, image_width, image_height);
+ }
+
+ function ShowTooltip(evt, mouseovertext) {
+  _ShowTooltip(evt,mouseovertext, null, 0, 0);
+ }
+
+ function _ShowTooltip(evt, mouseovertext, image_url, image_width, image_height ) {
   var loc = cursorPoint(evt);
   if ( scale ) {
    xratio = loc.x / evt.clientX;
@@ -108,16 +118,12 @@ $script->CDATA(qq|function init(evt)
 
    tooltip.style.fontSize = parseInt(normalFontSize * xratio)+"px";
 
-   width = tooltip_bg.getAttributeNS(null,"width");
-   height = tooltip_bg.getAttributeNS(null,"height");
-   tooltip_bg.setAttributeNS(null,"width",parseInt(width * xratio));
-   tooltip_bg.setAttributeNS(null,"height",parseInt(height * yratio));
-
+   tooltip_bg.setAttributeNS(null,"width",parseInt(tooltipWidth * xratio));
+   tooltip_bg.setAttributeNS(null,"height",parseInt(tooltipHeight * yratio));
    textAddLength = parseInt(textAddLength * xratio);
-
    scale = 0;
   }
-  bbox = tooltip.getBBox();
+
   tooltip.setAttributeNS(null,"x",loc.x+11);
   tooltip.setAttributeNS(null,"y",loc.y+15+(normalFontSize * xratio));
   tooltip.firstChild.data = mouseovertext;
@@ -127,6 +133,26 @@ $script->CDATA(qq|function init(evt)
   tooltip_bg.setAttributeNS(null,"x",loc.x+8);
   tooltip_bg.setAttributeNS(null,"y",loc.y+14);
 
+  if ( image_height > 0 ) {
+   tooltip_bg.setAttributeNS(null,"height",parseInt( ( tooltipHeight + image_height ) * yratio ) + 10 );
+  }else{
+   tooltip_bg.setAttributeNS(null,"height",parseInt( tooltipHeight * yratio ) );
+  }
+  if ( image_width > 0 ) {
+   tooltip_bg.setAttributeNS(null,"width",parseInt( image_width * xratio ) + 20 );
+  }
+  if ( image_url != null ) {
+   tooltip_img.setAttributeNS(null,"x",loc.x+18);
+   tooltip_img.setAttributeNS(null,"y",loc.y+20+(normalFontSize * xratio));
+   tooltip_img.setAttributeNS(null,"width",parseInt(image_width*xratio));
+   tooltip_img.setAttributeNS(null,"height",parseInt(image_height*yratio));
+   tooltip_img.setAttributeNS('http://www.w3.org/1999/xlink',"href",image_url);
+   tooltip_img.setAttributeNS(null,"visibility","visibile");
+  }else{
+   tooltip_img.setAttributeNS(null,"visibility","hidden");
+  }
+
+
   tooltip.setAttributeNS(null,"visibility","visible");
   tooltip_bg.setAttributeNS(null,"visibility","visibile");
  }
@@ -135,6 +161,7 @@ $script->CDATA(qq|function init(evt)
  {
   tooltip.setAttributeNS(null,"visibility","hidden");
   tooltip_bg.setAttributeNS(null,"visibility","hidden");
+  tooltip_img.setAttributeNS(null,"visibility","hidden");
  }|
 );
 $svg->style()->CDATA(qq|
@@ -144,7 +171,7 @@ $svg->style()->CDATA(qq|
   fill: black;
  }
  .tooltip_bg{
-  fill: white;
+  fill: #eef;
   stroke: black;
   stroke-width: 1;
   opacity: 0.85;
@@ -299,13 +326,16 @@ foreach $link ( sort keys %linkType ) {
 			&middle($ypos{$nodeb{$link}},$ypos{$nodea{$link}}),
 			$inrate . "%", 0
 		);
-		# TOOLTIP
 		if ( defined( $tooltip{$link} ) ) {
 			my $tooltip_text_in = $tooltip{$link};
 			my $speed = getSpeedString($maxbytes{$link}*8);
 			$tooltip_text_in =~ s/%RATE%/$speed/g;
 			$tooltip_text_in =~ s/%INUSE%/$inrate/g;
-			$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+			if ( defined( $tooltip_img_url{$link} ) && defined ( $tooltip_img_width{$link} ) && defined ( $tooltip_img_height{$link} ) ) {
+				$arrow1->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+			}else {
+				$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+			}
 			$arrow1->attrib("onmouseout","HideTooltip(evt)");
 		}
 	}else{
@@ -339,7 +369,6 @@ foreach $link ( sort keys %linkType ) {
 				$inrate . "%", 0
 			);
 		}
-		# TOOLTIP
 		if ( defined( $tooltip{$link} ) ) {
 			my $tooltip_text_in = $tooltip{$link};
 			my $tooltip_text_out = $tooltip{$link};
@@ -348,9 +377,14 @@ foreach $link ( sort keys %linkType ) {
 			$tooltip_text_out =~ s/%RATE%/$speed/g;
 			$tooltip_text_in =~ s/%INUSE%/$inrate/g;
 			$tooltip_text_out =~ s/%INUSE%/$outrate/g;
-			$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+			if ( defined( $tooltip_img_url{$link} ) && defined ( $tooltip_img_width{$link} ) && defined ( $tooltip_img_height{$link} ) ) {
+				$arrow1->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				$arrow2->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_in', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+			}else{
+				$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+				$arrow2->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_in')");
+			}
 			$arrow1->attrib("onmouseout","HideTooltip(evt)");
-			$arrow2->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_in')");
 			$arrow2->attrib("onmouseout","HideTooltip(evt)");
 		}
 	}
@@ -372,8 +406,33 @@ foreach( keys %xpos ) {
 &annotation;
 &objects;
 &bars;
-$svg->rectangle( x => 0, y => 0, rx => 4, ry => 4, width => 55, height => 17, id=>'tooltip_bg', class=>'tooltip_bg', visibility=>'hidden' );
-$svg->text( id=>'tooltip', class=>'tooltip', visibility=>'hidden' )->cdata( '' );
+
+# Tooltip stuf
+$svg->rectangle(
+	x => 0,
+	y => 0,
+	rx => 4,
+	ry => 4,
+	width => 55,
+	height => 17,
+	id=>'tooltip_bg',
+	class=>'tooltip_bg',
+	visibility=>'hidden'
+);
+$svg->text(
+	id=>'tooltip',
+	class=>'tooltip',
+	visibility=>'hidden'
+)->cdata( '' );
+$svg->image(
+	id      => 'tooltip_img',
+	visibility=>'hidden',
+	x       => 0,
+	y       => 0,
+	width   => 0,
+	height  => 0,
+	'-href' => ""
+);
 
 print "Generating image file $OUTPUT...\n\n" if($DEBUG);
 
@@ -799,7 +858,9 @@ sub read_config {
 				$tooltip{$link} = $xml->child( 'weathermap' )->child( 'links' )->child( 'default_tooltip' )->value;
 			}
 			if( $link_node->child( 'tooltip_img' ) ) {
-				$tooltip_url{$link} = $link_node->child( 'tooltip_img' )->value;
+				$tooltip_img_url{$link} = $link_node->child( 'tooltip_img' )->value;
+				$tooltip_img_width{$link} = $link_node->child( 'tooltip_img' )->attribute( 'width' );
+				$tooltip_img_height{$link} = $link_node->child( 'tooltip_img' )->attribute( 'height' );
 			}
 
 			my $id_member=0;
