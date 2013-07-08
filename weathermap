@@ -1,6 +1,6 @@
 #!/usr/bin/perl
 # Network Wearthermap-SVG - version 0.5
-# http://sourceforge.net/projects/weathermap-svg/
+# https://github.com/polymorf/weathermap-svg
 # David BERARD, <david@nfrance.com>
 # Based on http://netmon.grnet.gr/weathermap/ by Panagiotis Christias
 
@@ -1102,7 +1102,7 @@ sub drawLogo() {
 	my $y = shift;
 
 	my $link1=$svg->anchor(
-		-href => 'https://sourceforge.net/projects/weathermap-svg/',
+		-href => 'https://github.com/polymorf/weathermap-svg',
 		target => 'new_window'
 	);
 
@@ -1190,12 +1190,12 @@ sub checkconfig {
 }
 
 sub version {
-	print "Wearthermap-SVG v$VERSION - http://sourceforge.net/projects/weathermap-svg/\n";
+	print "Wearthermap-SVG v$VERSION - https://github.com/polymorf/weathermap-svg\n";
 }
 
 sub usage {
 	print <<EOM;
-Wearthermap-SVG v$VERSION - http://sourceforge.net/projects/weathermap-svg/
+Wearthermap-SVG v$VERSION - https://github.com/polymorf/weathermap-svg
 Usage: $0 [OPTION]...
 
 -c, --config=FILE  configuration file (default $CONFIG)
