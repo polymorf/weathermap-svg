@@ -150,7 +150,7 @@ $script->CDATA(qq|function init(evt)
    tooltip_img.setAttributeNS(null,"visibility","visibile");
   }else{
    tooltip_img.setAttributeNS(null,"visibility","hidden");
-   tooltip_img.setAttributeNS('http://www.w3.org/1999/xlink',"href",'');
+   tooltip_img.setAttributeNS('http://www.w3.org/1999/xlink',"href",null);
   }
 
 
@@ -163,7 +163,7 @@ $script->CDATA(qq|function init(evt)
   tooltip.setAttributeNS(null,"visibility","hidden");
   tooltip_bg.setAttributeNS(null,"visibility","hidden");
   tooltip_img.setAttributeNS(null,"visibility","hidden");
-  tooltip_img.setAttributeNS('http://www.w3.org/1999/xlink',"href",'');
+  tooltip_img.setAttributeNS('http://www.w3.org/1999/xlink',"href",null);
  }|
 );
 $svg->style()->CDATA(qq|
