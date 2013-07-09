@@ -79,117 +79,121 @@ my $svg= SVG->new(
 $svg->title( id=>'document-title' )->cdata( 'Weathermap-SVG' );
 
 my $script = $svg->script(-type=>"text/ecmascript");
-$script->CDATA(qq|function init(evt)
- {
-  if ( window.svgDocument == null )
-  {
-   svgDocument = evt.target.ownerDocument;
-  }
-  tooltip = svgDocument.getElementById('tooltip');
-  tooltip_bg = svgDocument.getElementById('tooltip_bg');
-  svg = document.querySelector('svg');
-  pt = svg.createSVGPoint();
-  scale = 1;
-  textAddLength = 8;
-  normalFontSize = 12;
-  tooltipHeight = 17;
-  tooltipWidth = 55;
- }
+$script->CDATA(qq|
+function init(evt) {
+	if (window.svgDocument == null) {
+		svgDocument = evt.target.ownerDocument;
+	}
+	tooltip = svgDocument.getElementById('tooltip');
+	tooltip_bg = svgDocument.getElementById('tooltip_bg');
+	svg = document.querySelector('svg');
+	textAddLength = 8;
+	normalFontSize = 12;
+	tooltipHeight = 17;
+	tooltipWidth = 55;
+	textAddLength = zoomX(textAddLength);
+}
 
- function cursorPoint(evt){
-  pt.x = evt.clientX; pt.y = evt.clientY;
-  return pt.matrixTransform(svg.getScreenCTM().inverse());
- }
+function cursorPoint(evt){
+	pt = svg.createSVGPoint();
+	pt.x = evt.clientX; pt.y = evt.clientY;
+	return pt.matrixTransform(svg.getScreenCTM().inverse());
+}
 
- function ShowTooltipWithImage(evt, mouseovertext, image_url, image_width, image_height ) {
-  _ShowTooltip(evt,mouseovertext, image_url, image_width, image_height);
- }
+function zoomX(input) {
+	inpt = svg.createSVGPoint();
+	inpt.x = input;
+	var out = inpt.matrixTransform(svg.getScreenCTM().inverse());
+	return parseInt(out.x);
+}
 
- function ShowTooltip(evt, mouseovertext) {
-  _ShowTooltip(evt,mouseovertext, null, 0, 0);
- }
-
- function _ShowTooltip(evt, mouseovertext, image_url, image_width, image_height ) {
-  var loc = cursorPoint(evt);
-  if ( scale ) {
-   xratio = loc.x / evt.clientX;
-   yratio = loc.y / evt.clientY;
-
-   tooltip.style.fontSize = parseInt(normalFontSize * xratio)+"px";
-
-   tooltip_bg.setAttributeNS(null,"width",parseInt(tooltipWidth * xratio));
-   tooltip_bg.setAttributeNS(null,"height",parseInt(tooltipHeight * yratio));
-   textAddLength = parseInt(textAddLength * xratio);
-   scale = 0;
-  }
-
-  tooltip.setAttributeNS(null,"x",loc.x+11);
-  tooltip.setAttributeNS(null,"y",loc.y+15+(normalFontSize * xratio));
-  tooltip.firstChild.data = mouseovertext;
-
-  length = tooltip.getComputedTextLength();
-  tooltip_bg.setAttributeNS(null,"width",length+textAddLength);
-  tooltip_bg.setAttributeNS(null,"x",loc.x+8);
-  tooltip_bg.setAttributeNS(null,"y",loc.y+14);
-
-  if ( image_height > 0 ) {
-   tooltip_bg.setAttributeNS(null,"height",parseInt( ( tooltipHeight + image_height ) * yratio ) + 10 );
-  }else{
-   tooltip_bg.setAttributeNS(null,"height",parseInt( tooltipHeight * yratio ) );
-  }
-  if ( image_width > 0 ) {
-   tooltip_bg.setAttributeNS(null,"width",parseInt( image_width * xratio ) + 20 );
-  }
-  /* Image */
-  if ( image_url != null ) {
-   tooltip_img_old = svgDocument.getElementById('tooltip_img');
-   if ( tooltip_img_old ) {
-    tooltip_img_old.parentNode.removeChild(tooltip_img_old);
-   }
-   var tooltip_img = document.createElementNS('http://www.w3.org/2000/svg','image');
-   tooltip_img.setAttributeNS(null,"id","tooltip_img");
-   tooltip_img.setAttributeNS(null,"x",loc.x+18);
-   tooltip_img.setAttributeNS(null,"y",loc.y+20+(normalFontSize * xratio));
-   tooltip_img.setAttributeNS(null,"width",parseInt(image_width*xratio));
-   tooltip_img.setAttributeNS(null,"height",parseInt(image_height*yratio));
-   tooltip_img.setAttributeNS('http://www.w3.org/1999/xlink',"href",image_url);
-   tooltip_img.setAttributeNS(null,"visibility","visibile");
-   svg.appendChild(tooltip_img);
-  }else{
-   tooltip_img_old = svgDocument.getElementById('tooltip_img');
-   if ( tooltip_img_old ) {
-    tooltip_img_old.parentNode.removeChild(tooltip_img_old);
-   }
-  }
+function zoomY(input) {
+	inpt = svg.createSVGPoint();
+	inpt.y = input;
+	var out = inpt.matrixTransform(svg.getScreenCTM().inverse());
+	return parseInt(out.y);
+}
 
 
-  tooltip.setAttributeNS(null,"visibility","visible");
-  tooltip_bg.setAttributeNS(null,"visibility","visibile");
- }
+function ShowTooltipWithImage(evt, mouseovertext, image_url, image_width, image_height ) {
+	_ShowTooltip(evt,mouseovertext, image_url, image_width, image_height);
+}
 
- function HideTooltip(evt)
- {
-  tooltip.setAttributeNS(null,"visibility","hidden");
-  tooltip_bg.setAttributeNS(null,"visibility","hidden");
-  tooltip_img_old = svgDocument.getElementById('tooltip_img');
-  if ( tooltip_img_old ) {
-   tooltip_img_old.parentNode.removeChild(tooltip_img_old);
-  }
- }|
+function ShowTooltip(evt, mouseovertext) {
+	_ShowTooltip(evt,mouseovertext, null, 0, 0);
+}
+
+function _ShowTooltip(evt, mouseovertext, image_url, image_width, image_height ) {
+	var loc = cursorPoint(evt);
+	tooltip.style.fontSize = zoomY(normalFontSize)+"px";
+
+	tooltip_bg.setAttributeNS(null,"width",zoomX(tooltipWidth));
+	tooltip_bg.setAttributeNS(null,"height",zoomY(tooltipHeight));
+
+	tooltip.setAttributeNS(null,"x",loc.x+21);
+	tooltip.setAttributeNS(null,"y",loc.y+15+zoomY(normalFontSize));
+	tooltip.firstChild.data = mouseovertext;
+
+	length = tooltip.getComputedTextLength();
+	tooltip_bg.setAttributeNS(null,"width",length+textAddLength+20);
+	tooltip_bg.setAttributeNS(null,"x",loc.x+8);
+	tooltip_bg.setAttributeNS(null,"y",loc.y+14);
+
+	if ( image_height > 0 ) {
+		tooltip_bg.setAttributeNS(null,"height",zoomY(tooltipHeight + image_height) + 10);
+	}else{
+		tooltip_bg.setAttributeNS(null,"height",zoomY( tooltipHeight ) );
+	}
+	if ( image_width > 0 ) {
+		tooltip_bg.setAttributeNS(null,"width",zoomX( image_width ) + 20 );
+	}
+	/* Image */
+	if ( image_url != null ) {
+		tooltip_img_old = svgDocument.getElementById('tooltip_img');
+		if ( tooltip_img_old ) {
+			tooltip_img_old.parentNode.removeChild(tooltip_img_old);
+		}
+		var tooltip_img = document.createElementNS('http://www.w3.org/2000/svg','image');
+		tooltip_img.setAttributeNS(null,"id","tooltip_img");
+		tooltip_img.setAttributeNS(null,"x",loc.x+18);
+		tooltip_img.setAttributeNS(null,"y",loc.y+20+zoomY(normalFontSize));
+		tooltip_img.setAttributeNS(null,"width",zoomX(image_width));
+		tooltip_img.setAttributeNS(null,"height",zoomY(image_height));
+		tooltip_img.setAttributeNS('http://www.w3.org/1999/xlink',"href",image_url);
+		tooltip_img.setAttributeNS(null,"visibility","visibile");
+		svg.appendChild(tooltip_img);
+	}else{
+		tooltip_img_old = svgDocument.getElementById('tooltip_img');
+		if ( tooltip_img_old ) {
+			tooltip_img_old.parentNode.removeChild(tooltip_img_old);
+		}
+	}
+	tooltip.setAttributeNS(null,"visibility","visible");
+	tooltip_bg.setAttributeNS(null,"visibility","visibile");
+}
+
+function HideTooltip(evt) {
+	tooltip.setAttributeNS(null,"visibility","hidden");
+	tooltip_bg.setAttributeNS(null,"visibility","hidden");
+	tooltip_img_old = svgDocument.getElementById('tooltip_img');
+	if ( tooltip_img_old ) {
+		tooltip_img_old.parentNode.removeChild(tooltip_img_old);
+	}
+}|
 );
 $svg->style()->CDATA(qq|
- .tooltip{
-  font-size: 12px;
-  font-weight: bold;
-  font-family: monospace;
-  fill: black;
- }
- .tooltip_bg{
-  fill: #eef;
-  stroke: black;
-  stroke-width: 1;
-  opacity: 0.85;
- }
+.tooltip{
+	font-size: 12px;
+	font-weight: bold;
+	font-family: monospace;
+	fill: black;
+}
+.tooltip_bg{
+	fill: #eef;
+	stroke: black;
+	stroke-width: 1;
+	opacity: 0.85;
+}
 |);
 
 &title;
@@ -327,7 +331,8 @@ foreach $link ( sort keys %linkType ) {
 		$dashed=1;
 	}
 	if ( $linkType{$link} eq "rrd-single" ) {
-		my $arrow1 = &draw_arrow(
+		my $label_in;
+		my $arrow_in = &draw_arrow(
 			$xpos{$nodea{$link}},
 			$ypos{$nodea{$link}},
 			$xpos{$nodeb{$link}},
@@ -335,11 +340,13 @@ foreach $link ( sort keys %linkType ) {
 			$width, 1, &select_color($inrate), &select_color_rgb($inrate),
 			$inrate,$svg_element,$dashed
 		);
-		&label(
-			$svg_element,&middle($xpos{$nodeb{$link}},$xpos{$nodea{$link}}),
-			&middle($ypos{$nodeb{$link}},$ypos{$nodea{$link}}),
-			$inrate . "%", 0
-		);
+		if ( !defined( $unknow{$link} ) ) {
+			my $label_in = &label(
+				$svg_element,&middle($xpos{$nodeb{$link}},$xpos{$nodea{$link}}),
+				&middle($ypos{$nodeb{$link}},$ypos{$nodea{$link}}),
+				$inrate . "%", 0
+			);
+		}
 		if ( defined( $tooltip{$link} ) ) {
 			my $tooltip_text_in = $tooltip{$link};
 			my $speed = getSpeedString($maxbytes{$link}*8);
@@ -348,14 +355,24 @@ foreach $link ( sort keys %linkType ) {
 			$tooltip_text_in =~ s/%INUSE%/$inrate/g;
 			$tooltip_text_in =~ s/%CURRENT_BANDWIDTH%/$current_speed/g;
 			if ( defined( $tooltip_img_url{$link} ) && defined ( $tooltip_img_width{$link} ) && defined ( $tooltip_img_height{$link} ) ) {
-				$arrow1->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				$arrow_in->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				if ( !defined( $unknow{$link} ) ) {
+					$label_in->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				}
 			}else {
-				$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+				$arrow_in->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+				if ( !defined( $unknow{$link} ) ) {
+					$label_in->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+				}
 			}
-			$arrow1->attrib("onmouseout","HideTooltip(evt)");
+			$arrow_in->attrib("onmouseout","HideTooltip(evt)");
+			if ( !defined( $unknow{$link} ) ) {
+				$label_in->attrib("onmouseout","HideTooltip(evt)");
+			}
 		}
 	}else{
-		my $arrow1 = &draw_arrow(
+		my ($label_in,$label_out);
+		my $arrow_out = &draw_arrow(
 			$xpos{$nodea{$link}},
 			$ypos{$nodea{$link}},
 			&middle($xpos{$nodea{$link}},$xpos{$nodeb{$link}}),
@@ -364,13 +381,13 @@ foreach $link ( sort keys %linkType ) {
 			$outrate,$svg_element,$dashed
 		);
 		if ( !defined( $unknow{$link} ) ) {
-			&label(
+			$label_out = &label(
 				$svg_element,&middle($xpos{$nodea{$link}},&middle($xpos{$nodea{$link}},$xpos{$nodeb{$link}})),
 				&middle($ypos{$nodea{$link}},&middle($ypos{$nodea{$link}},$ypos{$nodeb{$link}})),
 				$outrate . "%", 0
 			);
 		}
-		my $arrow2 = &draw_arrow(
+		my $arrow_in = &draw_arrow(
 			$xpos{$nodeb{$link}},
 			$ypos{$nodeb{$link}},
 			&middle($xpos{$nodea{$link}},$xpos{$nodeb{$link}}),
@@ -379,7 +396,7 @@ foreach $link ( sort keys %linkType ) {
 			$inrate,$svg_element,$dashed
 		);
 		if ( !defined( $unknow{$link} ) ) {
-			&label(
+			$label_in = &label(
 				$svg_element,&middle($xpos{$nodeb{$link}},&middle($xpos{$nodea{$link}},$xpos{$nodeb{$link}})),
 				&middle($ypos{$nodeb{$link}},&middle($ypos{$nodea{$link}},$ypos{$nodeb{$link}})),
 				$inrate . "%", 0
@@ -398,14 +415,26 @@ foreach $link ( sort keys %linkType ) {
 			$tooltip_text_in =~ s/%CURRENT_BANDWIDTH%/$current_speed_in/g;
 			$tooltip_text_out =~ s/%CURRENT_BANDWIDTH%/$current_speed_out/g;
 			if ( defined( $tooltip_img_url{$link} ) && defined ( $tooltip_img_width{$link} ) && defined ( $tooltip_img_height{$link} ) ) {
-				$arrow1->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
-				$arrow2->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_in', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				$arrow_out->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				$arrow_in->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_in', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				if ( !defined( $unknow{$link} ) ) {
+					$label_out->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_out', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+					$label_in->attrib("onmousemove","ShowTooltipWithImage(evt, '$tooltip_text_in', '$tooltip_img_url{$link}', $tooltip_img_width{$link}, $tooltip_img_height{$link})");
+				}
 			}else{
-				$arrow1->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
-				$arrow2->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_in')");
+				$arrow_out->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+				$arrow_in->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_in')");
+				if ( !defined( $unknow{$link} ) ) {
+					$label_out->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_out')");
+					$label_in->attrib("onmousemove","ShowTooltip(evt, '$tooltip_text_in')");
+				}
 			}
-			$arrow1->attrib("onmouseout","HideTooltip(evt)");
-			$arrow2->attrib("onmouseout","HideTooltip(evt)");
+			$arrow_out->attrib("onmouseout","HideTooltip(evt)");
+			$arrow_in->attrib("onmouseout","HideTooltip(evt)");
+			if ( !defined( $unknow{$link} ) ) {
+				$label_out->attrib("onmouseout","HideTooltip(evt)");
+				$label_in->attrib("onmouseout","HideTooltip(evt)");
+			}
 		}
 	}
 }
@@ -477,7 +506,7 @@ sub label {
 			'stroke' => '#000000'
 		}
 	);
-	$svg_element->text(
+	my $elem = $svg_element->text(
 		x => $xpos - $strwidth / 2,
 		y => $ypos + 4,
 		style=>( $label =~ /^#/ ) ? {
@@ -488,6 +517,7 @@ sub label {
 				'fill' => '#000066'
 			}
 	)->cdata( $label );
+	return $elem;
 }
 
 sub bars {
