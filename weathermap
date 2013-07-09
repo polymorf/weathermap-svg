@@ -234,14 +234,22 @@ sub getRRD($$) {
 	my $field = shift;
 	my $rrd = shift;
 
-	my $date = RRDs::last "$rrd";
+	my $rrdlast = RRDs::last "$rrd";
 	my $rrdinfo = RRDs::info "$rrd";
+	my $rrdstep = $$rrdinfo{step};
+	my $ts = time();
+	my $derive = $ts - $rrdlast;
 
-	my ( $start,$step,$names,$data ) = RRDs::fetch "$rrd","AVERAGE","--start",$date-$$rrdinfo{step},"--end",$date;
+	if ( $derive > ($rrdstep * 3) ) {
+		warn "[warn] $rrd last value is too old, skipping this RRD\n";
+		return 0;
+	}
+
+	my ( $start,$step,$names,$data ) = RRDs::fetch "$rrd","AVERAGE","--start",$rrdlast-$rrdstep,"--end",$rrdlast;
 	my $ERR=RRDs::error;
 	die "W4RRD ERROR while reading $target{$link}: $ERR\n" if $ERR;
 	foreach my $line ( @$data ) {
-		if( @$line[$field] != null ) {
+		if( defined ( @$line[$field] ) ) {
 			return @$line[$field];
 		}
 	}
