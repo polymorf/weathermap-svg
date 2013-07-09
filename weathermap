@@ -232,12 +232,12 @@ sub getMRTG($$) {
 sub getRRD($$) {
 	use RRDs;
 	my $field = shift;
-	my $data = shift;
+	my $rrd = shift;
 	if ( ! $DATE ) {
 		$DATE = RRDs::last "$data";
-		$DATE = $DATE-300;
+		$DATE = $DATE-301;
 	}
-	my ( $start,$step,$names,$data ) = RRDs::fetch "$data","AVERAGE","--start","$DATE","--end","$DATE";
+	my ( $start,$step,$names,$data ) = RRDs::fetch "$rrd","AVERAGE","--start","$DATE","--end","$DATE";
 	my $ERR=RRDs::error;
 	die "W4RRD ERROR while reading $target{$link}: $ERR\n" if $ERR;
 	foreach my $line ( @$data ) {
