@@ -32,6 +32,8 @@
 	 <!ELEMENT node (position, label)>
 	 <!ATTLIST node name ID #REQUIRED>
 	 <!ELEMENT label (#PCDATA)>
+	 <!ATTLIST label
+	 		align (top-left | top-center | top-right | middle-left | middile-center | middle-right | bottom-left | bottom-center | bottom-right ) #IMPLIED>
 
 	 <!ELEMENT links (default_tooltip?, link+)>
 	 <!ELEMENT default_tooltip (#PCDATA)>
@@ -73,6 +75,7 @@
 	 <!ELEMENT object (label, position, size, url?)>
 	 <!ATTLIST object name ID #REQUIRED>
 	 <!ATTLIST object color CDATA #IMPLIED>
+	 <!ATTLIST object stroke-color CDATA #IMPLIED>
 
 	 <!ELEMENT images (image*)>
 	 <!ELEMENT image (position, size)>

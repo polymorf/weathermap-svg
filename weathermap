@@ -4,7 +4,7 @@
 # David BERARD, <david@nfrance.com>
 # Based on http://netmon.grnet.gr/weathermap/ by Panagiotis Christias
 
-$VERSION = "0.5";
+$VERSION = "0.6";
 
 use Getopt::Long;
 use XML::Parser;
@@ -589,10 +589,12 @@ sub objects {
 	foreach $object ( sort keys %object_id ) {
 		my $object_label = $object_label{$object};
 		my $object_color = $object_color{$object};
+		my $object_stroke = $object_stroke{$object};
 		my $object_size_x = $xobjectsize{$object};
 		my $object_size_y= $yobjectsize{$object};
 		my $object_pos_x = $xobjectpos{$object};
 		my $object_pos_y = $yobjectpos{$object};
+		my $object_align = $object_text_align{$object};
 		if ( $url{$object} ) {
 			$svg_element = $svg->anchor(
 				-href => $url{$object},
@@ -610,12 +612,29 @@ sub objects {
 			ry     => 0,
 			style=>{
 				'fill' => $object_color,
-				'stroke' => '#000000'
+				'stroke' => $object_stroke
 			}
 		);
+		my ($label_x,$label_y);
+		if ( $object_align =~ /left/ ) {
+			$label_x = $object_pos_x+2;
+		}elsif( $object_align =~ /center/ ) {
+			$label_x = $object_pos_x+($object_size_x - 8*length($object_label))/2;
+		}elsif( $object_align =~ /right/ ) {
+			$label_x = $object_pos_x+($object_size_x - 8*length($object_label));
+		}
+		if ( $object_align =~ /top/ ) {
+			$label_y = $object_pos_y+10;
+		}elsif( $object_align =~ /middle/ ) {
+			$label_y = $object_pos_y+($object_size_y/2);
+		}elsif( $object_align =~ /bottom/ ) {
+			$label_y = $object_pos_y+($object_size_y-5);
+		}
+
+
 		$svg_element->text(
-			x => $object_pos_x+($object_size_x - 8*length($object_label))/2,
-			y => $object_pos_y+($object_size_y/2),
+			x => $label_x,
+			y => $label_y,
 			style => {
 				'font-family' => 'monospace',
 				'fill' => '#660000',
@@ -1025,6 +1044,14 @@ sub read_config {
 			if ( $object_node->attribute( 'color' ) ) {
 				$object_color = $object_node->attribute( 'color' );
 			}
+			my $object_stroke = "#000000";
+			if ( $object_node->attribute( 'stroke-color' ) ) {
+				$object_stroke = $object_node->attribute( 'stroke-color' );
+			}
+			my $object_text_align = "middle-center";
+			if ( $object_node->child( 'label' )->attribute( 'align' ) ) {
+				$object_text_align = $object_node->child( 'label' )->attribute( 'align' );
+			}
 
 			$object = $object_name;
 			$object_id{$object} = $obj_count;
@@ -1034,6 +1061,8 @@ sub read_config {
 			$xobjectsize{$object} = $object_size_x;
 			$yobjectsize{$object} = $object_size_y;
 			$object_color{$object} = $object_color;
+			$object_stroke{$object} = $object_stroke;
+			$object_text_align{$object} = $object_text_align;
 
 			if( $object_node->child( 'url' ) ) {
 				$url{$object}=$object_node->child( 'url' )->value;
