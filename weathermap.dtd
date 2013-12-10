@@ -73,9 +73,10 @@
 	 
 	 <!ELEMENT objects (object*)>
 	 <!ELEMENT object (label, position, size, url?)>
-	 <!ATTLIST object name ID #REQUIRED>
-	 <!ATTLIST object color CDATA #IMPLIED>
-	 <!ATTLIST object stroke-color CDATA #IMPLIED>
+	 <!ATTLIST object name ID #REQUIRED
+			color CDATA #IMPLIED
+			stroke-color CDATA #IMPLIED
+			background (true | false | 0 | 1) #IMPLIED>
 
 	 <!ELEMENT images (image*)>
 	 <!ELEMENT image (position, size)>

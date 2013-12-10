@@ -309,6 +309,8 @@ foreach $link ( sort keys  %linkType ) {
 
 print "\nCalculating rates...\n\n" if($DEBUG);
 
+&objects(1);
+
 foreach $link ( sort keys %linkType ) {
 	if ( !defined( $unknow{$link} ) ) {
 		$outrate = int( ( $output{$link} / $maxbytes{$link} + 0.005 ) * 100 );
@@ -448,6 +450,7 @@ foreach $link ( sort keys %linkType ) {
 }
 print "\n" if($DEBUG);
 
+
 foreach( keys %xpos ) {
 	if ( $url{$_} ) {
 		$svg_element = $svg->anchor(
@@ -461,7 +464,7 @@ foreach( keys %xpos ) {
 }
 
 &annotation;
-&objects;
+&objects(0);
 &bars;
 
 # Tooltip stuf
@@ -585,7 +588,8 @@ sub bars {
 	}
 }
 
-sub objects {
+sub objects ($) {
+	my $background=shift;
 	foreach $object ( sort keys %object_id ) {
 		my $object_label = $object_label{$object};
 		my $object_color = $object_color{$object};
@@ -595,6 +599,10 @@ sub objects {
 		my $object_pos_x = $xobjectpos{$object};
 		my $object_pos_y = $yobjectpos{$object};
 		my $object_align = $object_text_align{$object};
+		my $object_background = $object_background{$object};
+		if ( $background != $object_background ) {
+			next;
+		}
 		if ( $url{$object} ) {
 			$svg_element = $svg->anchor(
 				-href => $url{$object},
@@ -1052,6 +1060,11 @@ sub read_config {
 			if ( $object_node->child( 'label' )->attribute( 'align' ) ) {
 				$object_text_align = $object_node->child( 'label' )->attribute( 'align' );
 			}
+			my $object_background=0;
+			if ( $object_node->attribute( 'background' ) && ($object_node->attribute( 'background' ) eq "1" || $object_node->attribute( 'background' ) eq "true" )) {
+				$object_background=1;
+
+			}
 
 			$object = $object_name;
 			$object_id{$object} = $obj_count;
@@ -1061,6 +1074,7 @@ sub read_config {
 			$xobjectsize{$object} = $object_size_x;
 			$yobjectsize{$object} = $object_size_y;
 			$object_color{$object} = $object_color;
+			$object_background{$object} = $object_background;
 			$object_stroke{$object} = $object_stroke;
 			$object_text_align{$object} = $object_text_align;
 
