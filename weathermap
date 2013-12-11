@@ -84,6 +84,7 @@ function init(evt) {
 	if (window.svgDocument == null) {
 		svgDocument = evt.target.ownerDocument;
 	}
+	svg_width = svgDocument.getElementById('weathermap_root').getBBox().width;
 	tooltip = svgDocument.getElementById('tooltip');
 	tooltip_bg = svgDocument.getElementById('tooltip_bg');
 	svg = document.querySelector('svg');
@@ -130,14 +131,24 @@ function _ShowTooltip(evt, mouseovertext, image_url, image_width, image_height )
 	tooltip_bg.setAttributeNS(null,"width",zoomX(tooltipWidth));
 	tooltip_bg.setAttributeNS(null,"height",zoomY(tooltipHeight));
 
-	tooltip.setAttributeNS(null,"x",loc.x+21);
 	tooltip.setAttributeNS(null,"y",loc.y+15+zoomY(normalFontSize));
 	tooltip.firstChild.data = mouseovertext;
 
 	length = tooltip.getComputedTextLength();
 	tooltip_bg.setAttributeNS(null,"width",length+textAddLength+20);
-	tooltip_bg.setAttributeNS(null,"x",loc.x+8);
 	tooltip_bg.setAttributeNS(null,"y",loc.y+14);
+
+	var position_ratio = (loc.x / svg_width)*100;
+	if ( position_ratio <= 60 ) {
+		tooltip.setAttributeNS(null,"x",loc.x+21);
+		tooltip_bg.setAttributeNS(null,"x",loc.x+8);
+	}else if ( position_ratio <= 80 ) {
+		tooltip.setAttributeNS(null,"x",(loc.x+21)-zoomX(tooltipWidth));
+		tooltip_bg.setAttributeNS(null,"x",(loc.x+8)-zoomX(tooltipWidth));
+	}else if ( position_ratio <= 100 ) {
+		tooltip.setAttributeNS(null,"x",(loc.x+21)-(zoomX(tooltipWidth)*2));
+		tooltip_bg.setAttributeNS(null,"x",(loc.x+8)-zoomX(tooltipWidth)*2);
+	}
 
 	if ( image_height > 0 ) {
 		tooltip_bg.setAttributeNS(null,"height",zoomY(tooltipHeight + image_height) + 10);
@@ -146,6 +157,16 @@ function _ShowTooltip(evt, mouseovertext, image_url, image_width, image_height )
 	}
 	if ( image_width > 0 ) {
 		tooltip_bg.setAttributeNS(null,"width",zoomX( image_width ) + 20 );
+		if ( position_ratio <= 60 ) {
+			tooltip.setAttributeNS(null,"x",loc.x+21);
+			tooltip_bg.setAttributeNS(null,"x",loc.x+8);
+		}else if ( position_ratio <= 80 ) {
+			tooltip.setAttributeNS(null,"x",(loc.x+21)-(zoomX(image_width)/2));
+			tooltip_bg.setAttributeNS(null,"x",(loc.x+8)-(zoomX(image_width)/2));
+		}else if ( position_ratio <= 100 ) {
+			tooltip.setAttributeNS(null,"x",(loc.x+21)-zoomX(image_width));
+			tooltip_bg.setAttributeNS(null,"x",(loc.x+8)-zoomX(image_width));
+		}
 	}
 	/* Image */
 	if ( image_url != null ) {
@@ -155,7 +176,13 @@ function _ShowTooltip(evt, mouseovertext, image_url, image_width, image_height )
 		}
 		var tooltip_img = document.createElementNS('http://www.w3.org/2000/svg','image');
 		tooltip_img.setAttributeNS(null,"id","tooltip_img");
-		tooltip_img.setAttributeNS(null,"x",loc.x+18);
+		if ( position_ratio <= 60 ) {
+			tooltip_img.setAttributeNS(null,"x",loc.x+18);
+		}else if ( position_ratio <= 80 ) {
+			tooltip_img.setAttributeNS(null,"x",(loc.x+18)-(zoomX(image_width)/2));
+		}else if ( position_ratio <= 100 ) {
+			tooltip_img.setAttributeNS(null,"x",(loc.x+18)-zoomX(image_width));
+		}
 		tooltip_img.setAttributeNS(null,"y",loc.y+20+zoomY(normalFontSize));
 		tooltip_img.setAttributeNS(null,"width",zoomX(image_width));
 		tooltip_img.setAttributeNS(null,"height",zoomY(image_height));
